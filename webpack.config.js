@@ -7,6 +7,7 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
 const mode = process.env.NODE_ENV || "development";
+console.log(mode);
 
 module.exports = {
   mode,
@@ -87,4 +88,5 @@ module.exports = {
           ]
         : [],
   },
+  devtool: mode === "production" ? false : "cheap-module-source-map",
 };
