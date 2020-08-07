@@ -1,114 +1,38 @@
-import React, { useState, useEffect } from "react";
-import { withStyles } from "@material-ui/core/styles";
-import Chart from "./components/chart";
+import React from "react";
+import { BrowserRouter, Switch, Route, Redirect, Link } from "react-router-dom";
+import HomePage from "./pages/homePage";
+import ChartPage from "./pages/chartPage";
+import SideBar from "./components/navi";
+import CanvasPage from "./pages/canvasPage";
 
-const styles = (theme: any) => ({
-  "chart-container": {
-    height: 400,
-  },
-});
+const style: React.CSSProperties = {
+  flex: 1,
+  overflow: "auto",
+  border: "solid 1px #ccc",
+  borderRadius: "4px",
+};
 
-interface IApp {
-  theme: any;
-  classes: any;
-}
+interface Props {}
 
-interface ILineChartData {
-  labels: Array<String>;
-  datasets: Array<any>;
-}
-
-const App = (props: IApp) => {
-  const [lineChartData, setLineChartData] = useState<ILineChartData>({
-    labels: [],
-    datasets: [
-      {
-        type: "line",
-        label: "BTC-USD",
-        backgroundColor: "rgba(0, 0, 0, 0)",
-        borderColor: props.theme.palette.primary.main,
-        pointBackgroundColor: props.theme.palette.secondary.main,
-        pointBorderColor: props.theme.palette.secondary.main,
-        borderWidth: "2",
-        lineTension: 0.45,
-        data: [],
-      },
-    ],
-  });
-
-  const [lineChartOptions] = useState({
-    responsive: true,
-    maintainAspectRatio: false,
-    tooltips: {
-      enabled: true,
-    },
-    scales: {
-      xAxes: [
-        {
-          ticks: {
-            autoSkip: true,
-            maxTicksLimit: 10,
-          },
-        },
-      ],
-    },
-  });
-
-  useEffect(() => {
-    const subscribe = {
-      type: "subscribe",
-      channels: [
-        {
-          name: "ticker",
-          product_ids: ["BTC-USD"],
-        },
-      ],
-    };
-
-    const ws = new WebSocket("wss://ws-feed.gdax.com");
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify(subscribe));
-    };
-
-    ws.onmessage = (e) => {
-      const value: any = JSON.parse(e.data);
-      if (value.type !== "ticker") {
-        return;
-      }
-
-      setLineChartData((prevLineChartData) => {
-        const oldBtcDataSet = prevLineChartData.datasets[0];
-        const newBtcDataSet: any = { ...oldBtcDataSet };
-        newBtcDataSet.data.push(value.price);
-
-        const updateLabel = prevLineChartData.labels.concat(
-          new Date().toLocaleTimeString()
-        );
-
-        const newChartData = {
-          ...prevLineChartData,
-          datasets: [newBtcDataSet],
-          labels: updateLabel,
-        };
-        return newChartData;
-      });
-    };
-
-    return () => {
-      console.log("close");
-      ws.close();
-    };
-  }, []);
-
+const App = (props: Props) => {
   return (
-    <div>
-      <h1>실시간 가격 현황</h1>
-      <div className={props.classes["chart-container"]}>
-        <Chart data={lineChartData} options={lineChartOptions} />
+    <BrowserRouter>
+      <div style={{ display: "flex", flex: 1, margin: "10px", height: "80vh" }}>
+        <SideBar />
+        <main style={style}>
+          <Switch>
+            <Route path="/" exact component={HomePage} />
+            <Route path="/chart" exact component={ChartPage} />
+            <Route path="/canvas" exact component={CanvasPage} />
+            <Redirect path="*" to="/" />
+          </Switch>
+        </main>
       </div>
-    </div>
+      <footer style={{ textAlign: "center" }}>
+        <p>Copyright © 2020 nomoret project</p>
+      </footer>
+    </BrowserRouter>
   );
 };
 
-export default withStyles(styles, { withTheme: true })(App);
+export default App;
