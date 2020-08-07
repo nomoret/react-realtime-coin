@@ -5,6 +5,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
+const ManifestPlugin = require("webpack-manifest-plugin");
 
 const mode = process.env.NODE_ENV || "development";
 console.log(mode);
@@ -12,17 +13,22 @@ console.log(mode);
 module.exports = {
   mode,
   entry: {
-    main: "./src/index.js",
+    main: "./src/index.tsx",
   },
   output: {
-    filename: "[name].js",
     path: path.resolve("./dist"),
+    publicPath: "/",
+    filename: mode === "production" ? "[name].[chunkhash].js" : "[name].js",
+    chunkFilename: "[name].[chunkhash].js",
   },
   devServer: {
     overlay: true,
     stats: "errors-only",
     port: 3000,
     hot: true,
+  },
+  resolve: {
+    extensions: [".json", ".js", ".ts", ".tsx"],
   },
   module: {
     rules: [
@@ -43,7 +49,7 @@ module.exports = {
         },
       },
       {
-        test: /\.(js|jsx)$/,
+        test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules/,
         loader: "babel-loader",
       },
@@ -55,9 +61,10 @@ module.exports = {
     }),
     new webpack.DefinePlugin({}),
     new HtmlWebpackPlugin({
-      template: "./src/index.html",
+      template: path.join(__dirname, "public/index.html"),
+      favicon: path.join(__dirname, "public/favicon.ico"),
       templateParameters: {
-        env: mode === "development" ? "(개발용)" : "",
+        env: mode === "development" ? "(DevMode)" : "",
       },
       minify:
         mode === "production"
@@ -70,7 +77,21 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     ...(mode === "production"
-      ? [new MiniCssExtractPlugin({ filename: `[name].css` })]
+      ? [
+          new MiniCssExtractPlugin({
+            filename: `[name].css`,
+            chunkFilename: "[id].css",
+          }),
+        ]
+      : []),
+    new ManifestPlugin(),
+    ...(mode === "production"
+      ? [
+          new MiniCssExtractPlugin({
+            filename: `[name].css`,
+            chunkFilename: "[id].css",
+          }),
+        ]
       : []),
   ],
   optimization: {
@@ -87,6 +108,16 @@ module.exports = {
             }),
           ]
         : [],
+    splitChunks: {
+      cacheGroups: {
+        vendors: {
+          chunks: "initial",
+          name: "vendor",
+          enforce: true,
+        },
+      },
+    },
+    concatenateModules: true,
   },
   devtool: mode === "production" ? false : "cheap-module-source-map",
 };

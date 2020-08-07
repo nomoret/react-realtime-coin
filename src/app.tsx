@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { withStyles } from "@material-ui/core/styles";
-import Chart from "./chart";
+import Chart from "./components/chart";
 
-const styles = (theme) => ({
+const styles = (theme: any) => ({
   "chart-container": {
     height: 400,
   },
 });
 
-const App = (props) => {
-  const [lineChartData, setLineChartData] = useState({
+interface IApp {
+  theme: any;
+  classes: any;
+}
+
+interface ILineChartData {
+  labels: Array<String>;
+  datasets: Array<any>;
+}
+
+const App = (props: IApp) => {
+  const [lineChartData, setLineChartData] = useState<ILineChartData>({
     labels: [],
     datasets: [
       {
@@ -25,6 +35,7 @@ const App = (props) => {
       },
     ],
   });
+
   const [lineChartOptions] = useState({
     responsive: true,
     maintainAspectRatio: false,
@@ -61,24 +72,27 @@ const App = (props) => {
     };
 
     ws.onmessage = (e) => {
-      const value = JSON.parse(e.data);
+      const value: any = JSON.parse(e.data);
       if (value.type !== "ticker") {
         return;
       }
 
-      const oldBtcDataSet = lineChartData.datasets[0];
-      const newBtcDataSet = { ...oldBtcDataSet };
-      newBtcDataSet.data.push(value.price);
+      setLineChartData((prevLineChartData) => {
+        const oldBtcDataSet = prevLineChartData.datasets[0];
+        const newBtcDataSet: any = { ...oldBtcDataSet };
+        newBtcDataSet.data.push(value.price);
 
-      const newChartData = {
-        ...lineChartData,
-        datasets: [newBtcDataSet],
-        labels: lineChartData.labels.concat(new Date().toLocaleTimeString()),
-      };
+        const updateLabel = prevLineChartData.labels.concat(
+          new Date().toLocaleTimeString()
+        );
 
-      console.log(newChartData);
-
-      setLineChartData(newChartData);
+        const newChartData = {
+          ...prevLineChartData,
+          datasets: [newBtcDataSet],
+          labels: updateLabel,
+        };
+        return newChartData;
+      });
     };
 
     return () => {
