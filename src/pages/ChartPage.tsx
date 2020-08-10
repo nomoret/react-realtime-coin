@@ -5,7 +5,7 @@ import {
   useTheme,
   Theme,
 } from "@material-ui/core/styles";
-import Chart from "../components/chart";
+import Chart from "../components/Chart";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

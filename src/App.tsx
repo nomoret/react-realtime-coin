@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter, Switch, Route, Redirect, Link } from "react-router-dom";
-import HomePage from "./pages/homePage";
-import ChartPage from "./pages/chartPage";
-import SideBar from "./components/navi";
-import CanvasPage from "./pages/canvasPage";
+import HomePage from "./pages/HomePage";
+import ChartPage from "./pages/ChartPage";
+import SideBar from "./components/SideBar";
+import CanvasPage from "./pages/CanvasPage";
 
 const style: React.CSSProperties = {
   flex: 1,
