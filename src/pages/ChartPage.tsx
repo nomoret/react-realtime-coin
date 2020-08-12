@@ -6,6 +6,7 @@ import {
   Theme,
 } from "@material-ui/core/styles";
 import Chart from "../components/Chart";
+import { useSelector, useDispatch } from "react-redux";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -61,29 +62,23 @@ const ChartPage = (props: Props) => {
     },
   });
 
+  const { payload }: any = useSelector<any>((state) => state.currencies);
+
+  const dispatch = useDispatch();
   useEffect(() => {
-    const subscribe = {
-      type: "subscribe",
-      channels: [
-        {
-          name: "ticker",
-          product_ids: ["BTC-USD"],
-        },
-      ],
+    dispatch({
+      type: "CONNECT_SOCKET_REQUEST",
+    });
+
+    return () => {
+      dispatch({
+        type: "CLOSE_SOCKET_REQUEST",
+      });
     };
+  }, []);
 
-    const ws = new WebSocket("wss://ws-feed.gdax.com");
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify(subscribe));
-    };
-
-    ws.onmessage = (e) => {
-      const value: any = JSON.parse(e.data);
-      if (value.type !== "ticker") {
-        return;
-      }
-
+  useEffect(() => {
+    payload?.map((value: any) => {
       setLineChartData((prevLineChartData) => {
         const oldBtcDataSet = prevLineChartData.datasets[0];
         const newBtcDataSet: any = { ...oldBtcDataSet };
@@ -100,13 +95,8 @@ const ChartPage = (props: Props) => {
         };
         return newChartData;
       });
-    };
-
-    return () => {
-      console.log("close");
-      ws.close();
-    };
-  }, []);
+    });
+  }, [payload]);
 
   return (
     <div>
